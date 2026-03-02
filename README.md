@@ -1,4 +1,4 @@
-# ⚖️ LawLess AI: Digitalni Advokat za Svakoga
+# ⚖️ LawLess: Digitalni Advokat za Svakoga
 
 **LawLess** je AI MVP projekat dizajniran da demistifikuje pravne dokumente i zaštiti korisnike od štetnih klauzula koristeći najsavremenije LLM modele.
 

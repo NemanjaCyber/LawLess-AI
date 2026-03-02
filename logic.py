@@ -45,15 +45,66 @@ def analyze_contract(text):
     )
     return response.choices[0].message.content
 
-def create_pdf_report(content):
+def create_pdf_report(report_text):
+    # Mapiranje svih mogućih problematičnih karaktera (Ćirilica -> Latinica)
+    cyr_to_lat = {
+        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'ђ': 'dj', 'е': 'e', 'ж': 'z',
+        'з': 'z', 'и': 'i', 'ј': 'j', 'к': 'k', 'л': 'l', 'љ': 'lj', 'м': 'm', 'н': 'n',
+        'њ': 'nj', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'ћ': 'c', 'u': 'u',
+        'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'c', 'џ': 'dz', 'ш': 's',
+        'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Ђ': 'Dj', 'Е': 'E', 'Ж': 'Z',
+        'З': 'Z', 'И': 'I', 'Ј': 'J', 'К': 'K', 'Л': 'L', 'Љ': 'Lj', 'M': 'M', 'Н': 'N',
+        'Њ': 'Nj', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'Ћ': 'C', 'У': 'U',
+        'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'C', 'Џ': 'Dz', 'Š': 'S',
+        # Naša latinična slova sa kvačicama (za svaki slučaj)
+        'š': 's', 'ć': 'c', 'č': 'c', 'đ': 'dj', 'ž': 'z',
+        'Š': 'S', 'Ć': 'C', 'Č': 'C', 'Đ': 'Dj', 'Ž': 'Z'
+    }
+
+    # 1. Prvo menjamo sve prepoznate karaktere
+    for cyr, lat in cyr_to_lat.items():
+        report_text = report_text.replace(cyr, lat)
+
+    # 2. Finalno čišćenje: pretvaramo u ASCII i ignorišemo sve što je preostalo
+    # Ovo osigurava da latin-1 codec u FPDF-u nikada ne vidi karaktere van opsega
+    clean_text = report_text.encode('ascii', 'ignore').decode('ascii')
+
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="LawLess AI - Analiza ugovora", ln=True, align='C')
-    pdf.ln(10)
-    # Dekodiramo tekst za PDF (fpdf ima problema sa našim čćž, koristimo latin-1)
-    pdf.multi_cell(0, 10, txt=content.encode('latin-1', 'replace').decode('latin-1'))
     
-    output_path = "izvestaj_analize.pdf"
-    pdf.output(output_path)
-    return output_path
+    # Naslov
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(200, 10, txt="LawLess AI - Izvestaj Analize", ln=True, align="C")
+    
+    pdf.ln(10)
+    
+    # Sadržaj
+    pdf.set_font("Arial", size=12)
+    # multi_cell za automatski prelom redova
+    pdf.multi_cell(0, 10, txt=clean_text)
+    
+    # Vraćamo PDF kao bajtove
+    return pdf.output(dest='S').encode('latin-1', 'ignore')
+
+def get_risk_score(text):
+    prompt = f"""
+    Na osnovu teksta ugovora, oceni nivo pravnog rizika za potpisnika na skali od 1 do 10.
+    Gde je 1 potpuno bezbedan ugovor, a 10 izuzetno opasan i nepovoljan.
+    
+    ODGOVORI SAMO JEDNIM BROJEM. Bez dodatnog teksta.
+    
+    Tekst:
+    {text[:5000]}
+    """
+    response = client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model="llama-3.3-70b-versatile",
+        temperature=0.1,
+    )
+    
+    # Izvlačimo samo broj iz odgovora
+    score_str = response.choices[0].message.content.strip()
+    try:
+        return int(score_str)
+    except:
+        return 5 # Fallback ako AI nešto pobrljavi

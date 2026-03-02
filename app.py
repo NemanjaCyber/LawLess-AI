@@ -5,10 +5,10 @@ import base64
 st.set_page_config(page_title="LawLess AI", layout="wide")
 
 # Sidebar za navigaciju
-st.sidebar.title("⚖️ LawLess AI")
-st.sidebar.info("Vaš alat za analizu ugovora bez advokatskih troškova.")
+st.sidebar.title("⚖️ LawLess ⚖️")
+st.sidebar.info("Alat za analizu ugovora bez advokatskih troškova.")
 
-st.title("Pravna Analiza u Realnom Vremenu")
+st.title("Pravna analiza u realnom vremenu")
 
 uploaded_file = st.file_uploader("Otpremite PDF ugovor", type="pdf")
 
@@ -41,11 +41,31 @@ if uploaded_file:
         raw_text = logic.extract_text_from_pdf(uploaded_file)
 
     with col2:
-        st.subheader("🤖 AI Analiza")
+        st.subheader("AI Analiza")
         if st.button("Pokreni Analizu", key="glavno_dugme_analize"):
             with st.spinner("Llama 3 analizira klauzule..."):
                 izvestaj = logic.analyze_contract(raw_text)
+        
+                risk_score = logic.get_risk_score(raw_text)
                 
+                st.markdown("---")
+                st.subheader("📊 Ukupna ocena rizika")
+                
+                # Određivanje boje i opisa na osnovu rezultata
+                if risk_score <= 3:
+                    color = "green"
+                    label = "NIZAK RIZIK - Ugovor deluje standardno."
+                elif risk_score <= 7:
+                    color = "orange"
+                    label = "SREDNJI RIZIK - Obratite pažnju na detalje."
+                else:
+                    color = "red"
+                    label = "VISOK RIZIK - Ne potpisujte bez stručne pomoći!"
+
+                # Vizuelni progress bar
+                st.progress(risk_score * 10) # Streamlit progress ide od 0 do 100
+                st.markdown(f"### Nivo: :{color}[{risk_score}/10] - {label}")
+
                 # 1. Priprema "fioka" za tekst
                 sekcije = {
                     "sazetak": [],
@@ -99,10 +119,9 @@ if uploaded_file:
                         st.info("\n".join(sekcije["sazetak"]))
 
                 if sekcije["rizici"]:
-                    with st.expander("⚠️ IDENTIFIKOVANI RIZICI (RED FLAGS)", expanded=True):
+                    with st.expander("⚠️ IDENTIFIKOVANI RIZICI", expanded=True):
                         # Sve u ovoj sekciji će biti CRVENO
-                        for r in sekcije["rizici"]:
-                            st.error(r)
+                        st.error("\n".join(sekcije["rizici"]))
 
                 if sekcije["podaci"]:
                     with st.expander("📊 KLJUČNI PODACI I STRANE", expanded=True):
