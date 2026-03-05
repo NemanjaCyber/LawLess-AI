@@ -11,88 +11,61 @@ def extract_text_from_pdf(pdf_file):
     reader = PdfReader(pdf_file)
     text = ""
     for page in reader.pages:
-        text += page.extract_text()
+        text += page.extract_text() or ""
     return text
 
 def analyze_contract(text):
     prompt = f"""
-    Ti si ekspertni pravni savetnik. Analiziraj ugovor i strogo se pridržavaj sledećeg formata:
-    
-    SAŽETAK: (Ovde napiši kratku suštinu ugovora u 2-3 rečenice)
-    
-    RIZICI (RED FLAGS): 
-    - (Ovde listaj rizike koristeći bullet pointe)
-    - (Svaki rizik treba da bude u novom redu)
-    
-    KLJUČNI PODACI:
-    - (Strane u ugovoru, datumi, cifre)
-    
-    VAŽNA NAPOMENA: Odgovori isključivo na srpskom jeziku.
+    Ti si ekspertni pravni savetnik koji analizira TEMPLATE ugovore (prazne obrasce bez popunjenih podataka).
+    Tvoj zadatak je da analiziras STRUKTURU i KLAUZULE ugovora, a ne konkretne strane ili iznose.
+
+    Strogo se pridrzavaj TACNO ovog formata (ne menjaj nazive sekcija):
+
+    SAZETAK:
+    (2-3 recenice: koja je VRSTA ugovora, cemu sluzi, ko su tipicno strane koje ga potpisuju)
+
+    RIZICI:
+    - (Analiziraj svaku klauzulu koja moze biti nepovoljna za potpisnika)
+    - (Ukazi na nejasne formulacije, jednostrane odredbe, skrivene obaveze)
+    - (Ukazi na ono sto NEDOSTAJE - vazne zastitne klauzule kojih nema u templateu)
+
+    PREPORUKE:
+    - (Sta treba pazljivo popuniti pre potpisivanja)
+    - (Na koje stavke obratiti posebnu paznju prilikom unosa podataka)
+
+    KLJUCNI PODACI:
+    - (Tip ugovora, nadleznost ako je navedena, trajanje, uslovi raskida)
 
     STROGA PRAVILA:
-    1. Odgovori ISKLJUČIVO na LATINICI. Zabranjena je upotreba ćirilice.
-    2. Zabranjena je upotreba bilo kakvih EMOJIJA (ikona). Koristi samo čist tekst.
-    3. Koristi profesionalni, ali razumljiv rečnik.
-    
+    1. Odgovori ISKLJUCIVO na srpskom jeziku i LATINICI. Zabranjena je cirilica.
+    2. Bez emojija, samo cist tekst.
+    3. Nikad ne izmisljaj konkretne podatke - ugovor je template.
+    4. Ako klauzula nedostaje a trebalo bi da postoji, eksplicitno to napomeni.
+    5. Koristi TACNO iste nazive sekcija kao sto je zadato gore.
+
     Tekst ugovora:
-    {text[:7000]} 
+    {text[:7000]}
     """
-    
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         model="llama-3.3-70b-versatile",
-        temperature=0.2, # Smanjujemo kreativnost da bi bio precizniji
+        temperature=0.2,
     )
     return response.choices[0].message.content
 
-def create_pdf_report(report_text):
-    # Mapiranje svih mogućih problematičnih karaktera (Ćirilica -> Latinica)
-    cyr_to_lat = {
-        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'ђ': 'dj', 'е': 'e', 'ж': 'z',
-        'з': 'z', 'и': 'i', 'ј': 'j', 'к': 'k', 'л': 'l', 'љ': 'lj', 'м': 'm', 'н': 'n',
-        'њ': 'nj', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'ћ': 'c', 'u': 'u',
-        'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'c', 'џ': 'dz', 'ш': 's',
-        'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Ђ': 'Dj', 'Е': 'E', 'Ж': 'Z',
-        'З': 'Z', 'И': 'I', 'Ј': 'J', 'К': 'K', 'Л': 'L', 'Љ': 'Lj', 'M': 'M', 'Н': 'N',
-        'Њ': 'Nj', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'Ћ': 'C', 'У': 'U',
-        'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'C', 'Џ': 'Dz', 'Š': 'S',
-        # Naša latinična slova sa kvačicama (za svaki slučaj)
-        'š': 's', 'ć': 'c', 'č': 'c', 'đ': 'dj', 'ž': 'z',
-        'Š': 'S', 'Ć': 'C', 'Č': 'C', 'Đ': 'Dj', 'Ž': 'Z'
-    }
-
-    # 1. Prvo menjamo sve prepoznate karaktere
-    for cyr, lat in cyr_to_lat.items():
-        report_text = report_text.replace(cyr, lat)
-
-    # 2. Finalno čišćenje: pretvaramo u ASCII i ignorišemo sve što je preostalo
-    # Ovo osigurava da latin-1 codec u FPDF-u nikada ne vidi karaktere van opsega
-    clean_text = report_text.encode('ascii', 'ignore').decode('ascii')
-
-    pdf = FPDF()
-    pdf.add_page()
-    
-    # Naslov
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(200, 10, txt="LawLess AI - Izvestaj Analize", ln=True, align="C")
-    
-    pdf.ln(10)
-    
-    # Sadržaj
-    pdf.set_font("Arial", size=12)
-    # multi_cell za automatski prelom redova
-    pdf.multi_cell(0, 10, txt=clean_text)
-    
-    # Vraćamo PDF kao bajtove
-    return pdf.output(dest='S').encode('latin-1', 'ignore')
-
 def get_risk_score(text):
     prompt = f"""
-    Na osnovu teksta ugovora, oceni nivo pravnog rizika za potpisnika na skali od 1 do 10.
-    Gde je 1 potpuno bezbedan ugovor, a 10 izuzetno opasan i nepovoljan.
-    
-    ODGOVORI SAMO JEDNIM BROJEM. Bez dodatnog teksta.
-    
+    Analiziras PRAZAN TEMPLATE ugovora (bez popunjenih podataka).
+    Oceni koliko su KLAUZULE I STRUKTURA ovog templatea potencijalno rizicne za osobu koja ga potpise, na skali 1 do 10.
+
+    Kriterijumi:
+    - Da li su klauzule jednostrane?
+    - Da li postoje nejasne ili manipulativne formulacije?
+    - Da li nedostaju vazne zastitne klauzule?
+    - Koliko prostora template ostavlja za zloupotrebu pri popunjavanju?
+
+    ODGOVORI SAMO JEDNIM BROJEM OD 1 DO 10. Bez ikakvog dodatnog teksta.
+
     Tekst:
     {text[:5000]}
     """
@@ -101,10 +74,36 @@ def get_risk_score(text):
         model="llama-3.3-70b-versatile",
         temperature=0.1,
     )
-    
-    # Izvlačimo samo broj iz odgovora
     score_str = response.choices[0].message.content.strip()
-    try:
-        return int(score_str)
-    except:
-        return 5 # Fallback ako AI nešto pobrljavi
+    for char in score_str:
+        if char.isdigit():
+            val = int(char)
+            if 1 <= val <= 10:
+                return val
+    return 5
+
+def create_pdf_report(report_text):
+    cyr_to_lat = {
+        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'ђ': 'dj', 'е': 'e', 'ж': 'z',
+        'з': 'z', 'и': 'i', 'ј': 'j', 'к': 'k', 'л': 'l', 'љ': 'lj', 'м': 'm', 'н': 'n',
+        'њ': 'nj', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'ћ': 'c',
+        'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'c', 'џ': 'dz', 'ш': 's',
+        'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Ђ': 'Dj', 'Е': 'E', 'Ж': 'Z',
+        'З': 'Z', 'И': 'I', 'Ј': 'J', 'К': 'K', 'Л': 'L', 'Љ': 'Lj', 'Н': 'N',
+        'Њ': 'Nj', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'Ћ': 'C', 'У': 'U',
+        'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'C', 'Џ': 'Dz',
+        'š': 's', 'ć': 'c', 'č': 'c', 'đ': 'dj', 'ž': 'z',
+        'Š': 'S', 'Ć': 'C', 'Č': 'C', 'Đ': 'Dj', 'Ž': 'Z'
+    }
+    for cyr, lat in cyr_to_lat.items():
+        report_text = report_text.replace(cyr, lat)
+    clean_text = report_text.encode('ascii', 'ignore').decode('ascii')
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(200, 10, txt="LawLess AI - Izvestaj Analize", ln=True, align="C")
+    pdf.ln(10)
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, txt=clean_text)
+    return pdf.output(dest='S').encode('latin-1', 'ignore')
