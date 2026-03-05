@@ -1,4 +1,4 @@
-# ⚖️ LawLess: Digitalni Advokat za Svakoga
+# ⚖️ LawLess: Digitalni Advokat
 
 **LawLess** je AI MVP projekat dizajniran da demistifikuje pravne dokumente i zaštiti korisnike od štetnih klauzula koristeći najsavremenije LLM modele.
 
@@ -12,7 +12,7 @@ Pravni žargon je barijera koja prosečnog čoveka ostavlja nezaštićenim. Već
 
 ## Glavne Funkcionalnosti
 1. **Automatsko Sumiranje:** Pretvara 20 strana teksta u 3 ključne tačke.
-2. **Red Flag Detektor:** Identifikacija penala, skrivenih troškova i nepovoljnih rokova.
+2. **RDetektor rizika:** Identifikacija penala, skrivenih troškova i nepovoljnih rokova.
 3. **Pravni Prevodilac:** Objašnjavanje komplikovanih termina na svakodnevnom jeziku.
 
 ## Tehnološki Stack
