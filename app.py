@@ -19,13 +19,23 @@ if uploaded_file:
 
         bytes_data = uploaded_file.getvalue()
         base64_pdf = base64.b64encode(bytes_data).decode('utf-8')
-        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
 
-        st.markdown("""
-            <style>
-            iframe { border-radius: 10px; border: 1px solid #4A4A4A; }
-            </style>
-        """, unsafe_allow_html=True)
+        # <object> tag je manje restriktivan od <iframe> u Brave/Edge
+        pdf_display = f'''
+            <object
+                data="data:application/pdf;base64,{base64_pdf}"
+                type="application/pdf"
+                width="100%"
+                height="600px"
+                style="border-radius:10px; border:1px solid #4A4A4A;">
+                <p style="color:#ccc; padding:20px;">
+                    Vaš browser blokira prikaz PDF-a. 
+                    <a href="data:application/pdf;base64,{base64_pdf}" download="ugovor.pdf" style="color:#4A9EFF;">
+                        Kliknite ovde da preuzmete PDF.
+                    </a>
+                </p>
+            </object>
+        '''
 
         st.markdown(pdf_display, unsafe_allow_html=True)
         raw_text = logic.extract_text_from_pdf(uploaded_file)
@@ -34,7 +44,6 @@ if uploaded_file:
         st.subheader("AI Analiza")
         if st.button("Pokreni Analizu", key="glavno_dugme_analize"):
 
-            # --- Korak 1: Validacija dokumenta ---
             with st.spinner("Proveravam tip dokumenta..."):
                 try:
                     je_validan = logic.validate_document(raw_text)
@@ -46,7 +55,6 @@ if uploaded_file:
                 st.error("❌ Otpremljeni dokument ne izgleda kao ugovor. Molimo otpremite pravni ugovor ili template ugovora.")
                 st.stop()
 
-            # --- Korak 2: Analiza ---
             with st.spinner("Llama 3 analizira klauzule..."):
                 try:
                     izvestaj = logic.analyze_contract(raw_text)
@@ -55,7 +63,6 @@ if uploaded_file:
                     st.error(f"Greška pri analizi: {e}")
                     st.stop()
 
-            # --- Risk score prikaz ---
             st.markdown("---")
             st.subheader("📊 Ukupna ocena rizika")
 
@@ -72,7 +79,6 @@ if uploaded_file:
             st.progress(risk_score * 10)
             st.markdown(f"### Nivo: :{color}[{risk_score}/10] - {label}")
 
-            # --- Parser sekcija ---
             SEKCIJE_MAPA = {
                 "sazetak":   ["sazetak", "sažetak"],
                 "rizici":    ["rizici", "red flags", "opasnost"],
@@ -87,10 +93,8 @@ if uploaded_file:
                 clean_line = line.strip()
                 if not clean_line:
                     continue
-
                 lower_line = clean_line.lower()
                 matched = False
-
                 for slot, kljucne_reci in SEKCIJE_MAPA.items():
                     if any(kw in lower_line for kw in kljucne_reci):
                         current_section = slot
@@ -100,11 +104,9 @@ if uploaded_file:
                                 sekcije[slot].append(content)
                         matched = True
                         break
-
                 if not matched and current_section:
                     sekcije[current_section].append(clean_line)
 
-            # --- Prikaz rezultata ---
             st.markdown("---")
             st.header("🔍 Rezultati Analize")
 
@@ -124,13 +126,11 @@ if uploaded_file:
                 with st.expander("📊 KLJUČNI PODACI", expanded=True):
                     st.success("\n".join(sekcije["podaci"]))
 
-            # Fallback ako parser nije uhvatio nista
             if not any(sekcije.values()):
                 st.markdown("---")
                 st.subheader("Sirovi odgovor AI-ja")
                 st.text(izvestaj)
 
-            # --- Export ---
             st.markdown("### 📥 Preuzmite izveštaj")
             pdf_data = logic.create_pdf_report(izvestaj)
             st.download_button(
