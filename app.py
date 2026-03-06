@@ -378,6 +378,9 @@ if uploaded_file:
                 "preporuke": ["preporuke"],
                 "podaci":    ["kljucni podaci", "ključni podaci"],
             }
+            # Reci koje prekidaju parsiranje - sve posle se ignorise
+            STOP_RECI = ["stroga pravila", "vazna napomena", "napomena:", "disclaimer"]
+
             sekcije = {k: [] for k in SEKCIJE_MAPA}
             current_section = None
 
@@ -386,6 +389,11 @@ if uploaded_file:
                 if not clean_line:
                     continue
                 lower_line = clean_line.lower()
+
+                # Ako naletimo na stop rec, prekidamo parsiranje
+                if any(stop in lower_line for stop in STOP_RECI):
+                    break
+
                 matched = False
                 for slot, kljucne_reci in SEKCIJE_MAPA.items():
                     if any(kw in lower_line for kw in kljucne_reci):
