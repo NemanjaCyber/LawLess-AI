@@ -16,13 +16,19 @@ def extract_text_from_pdf(pdf_file):
 
 def validate_document(text):
     """
-    Proverava da li je dokument ugovor ili template ugovora.
-    Vraca True ako jeste, False ako nije.
+    Proverava da li dokument ima ikakve veze sa ugovorom ili pravnim tekstom.
+    Namerno je permisivan - odbija samo ocigledne ne-ugovore (slike, CV, fakture...).
     """
     prompt = f"""
-Da li je sledeci tekst pravni ugovor ili template (obrazac) ugovora?
+Proceni sledeci dokument. Da li je ovo BILO KOJI od sledecih tipova dokumenta:
+- Ugovor (potpisan ili nepotpisan)
+- Template ili obrazac ugovora
+- Pravni dokument sa klauzulama
+- Sporazum, aneks, addendum
+- Dokument koji sadrzi pravne odredbe ili obaveze
 
-Odgovori ISKLJUCIVO sa "DA" ili "NE". Bez ikakvog dodatnog teksta.
+Odgovori SAMO sa "DA" ako spada u bilo koju od ovih kategorija.
+Odgovori SAMO sa "NE" ako je to nesto potpuno drugo (npr. CV, faktura, clanak, slika, prezentacija).
 
 Tekst dokumenta:
 {text[:2000]}
