@@ -6,7 +6,7 @@ import os
 st.set_page_config(page_title="LawLess AI", layout="wide", page_icon="⚖️")
 
 # ── Load CSS ──────────────────────────────────────────────────────────────────
-css_path = os.path.join(os.path.dirname(__file__), "style.css")
+css_path = os.path.join(os.path.dirname(__file__), "Style.css")
 with open(css_path) as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
