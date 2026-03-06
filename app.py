@@ -1,257 +1,21 @@
 import streamlit as st
 import logic
 import base64
+import os
 
 st.set_page_config(page_title="LawLess AI", layout="wide", page_icon="⚖️")
 
-# ── Global CSS ────────────────────────────────────────────────────────────────
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+# ── Load CSS ──────────────────────────────────────────────────────────────────
+css_path = os.path.join(os.path.dirname(__file__), "style.css")
+with open(css_path) as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-/* Reset & base */
-html, body, [class*="css"] {
-    font-family: 'IBM Plex Sans', sans-serif;
-    background-color: #0f0f0f;
-    color: #e8e2d9;
-}
-
-/* Hide Streamlit chrome */
-#MainMenu, footer, header { visibility: hidden; }
-.block-container { padding-top: 2rem !important; max-width: 1400px !important; }
-
-/* ── Sidebar ── */
-section[data-testid="stSidebar"] {
-    background: #141414;
-    border-right: 1px solid #2a2a2a;
-}
-section[data-testid="stSidebar"] * {
-    color: #e8e2d9 !important;
-    font-family: 'IBM Plex Sans', sans-serif !important;
-}
-.sidebar-brand {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #c9a84c !important;
-    letter-spacing: 0.05em;
-    padding: 1rem 0 0.25rem 0;
-    border-bottom: 1px solid #2a2a2a;
-    margin-bottom: 1rem;
-}
-.sidebar-tagline {
-    font-size: 0.78rem;
-    color: #888 !important;
-    line-height: 1.5;
-    font-weight: 300;
-}
-
-/* ── Header ── */
-.app-header {
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-    margin-bottom: 2rem;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid #2a2a2a;
-}
-.app-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #e8e2d9;
-    letter-spacing: -0.01em;
-    margin: 0;
-}
-.app-title span { color: #c9a84c; }
-.app-subtitle {
-    font-size: 0.85rem;
-    color: #666;
-    font-weight: 300;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-/* ── Upload area ── */
-[data-testid="stFileUploader"] {
-    background: #141414 !important;
-    border: 1px solid #2a2a2a !important;
-    border-radius: 4px !important;
-    padding: 0.5rem !important;
-}
-[data-testid="stFileUploader"]:hover {
-    border-color: #c9a84c !important;
-}
-[data-testid="stFileUploader"] label {
-    color: #888 !important;
-    font-size: 0.82rem !important;
-    letter-spacing: 0.06em !important;
-    text-transform: uppercase !important;
-}
-
-/* ── Section headings ── */
-.section-label {
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #c9a84c;
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #2a2a2a;
-}
-
-/* ── Analyze button ── */
-.stButton > button {
-    background: #c9a84c !important;
-    color: #0f0f0f !important;
-    border: none !important;
-    border-radius: 2px !important;
-    font-family: 'IBM Plex Sans', sans-serif !important;
-    font-size: 0.78rem !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.12em !important;
-    text-transform: uppercase !important;
-    padding: 0.65rem 2rem !important;
-    width: 100% !important;
-    transition: all 0.2s ease !important;
-}
-.stButton > button:hover {
-    background: #e0be6a !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 20px rgba(201,168,76,0.25) !important;
-}
-
-/* ── Risk score card ── */
-.risk-card {
-    background: #141414;
-    border: 1px solid #2a2a2a;
-    border-radius: 4px;
-    padding: 1.25rem 1.5rem;
-    margin: 1rem 0;
-}
-.risk-number {
-    font-family: 'Playfair Display', serif;
-    font-size: 3rem;
-    font-weight: 700;
-    line-height: 1;
-}
-.risk-label {
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-top: 0.25rem;
-    font-weight: 400;
-}
-.risk-low  { color: #4a9d6f; }
-.risk-mid  { color: #d4843a; }
-.risk-high { color: #c94a4a; }
-
-/* ── Progress bar ── */
-.stProgress > div > div {
-    background: #2a2a2a !important;
-    border-radius: 2px !important;
-    height: 4px !important;
-}
-.stProgress > div > div > div {
-    border-radius: 2px !important;
-}
-
-/* ── Result panels ── */
-.result-panel {
-    background: #141414;
-    border: 1px solid #2a2a2a;
-    border-left: 3px solid #c9a84c;
-    border-radius: 2px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 0.75rem;
-    font-size: 0.88rem;
-    line-height: 1.7;
-    color: #d0c9be;
-}
-.result-panel.danger  { border-left-color: #c94a4a; }
-.result-panel.warning { border-left-color: #d4843a; }
-.result-panel.success { border-left-color: #4a9d6f; }
-
-.panel-title {
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    margin-bottom: 0.75rem;
-    color: #888;
-}
-
-/* ── Expanders ── */
-[data-testid="stExpander"] {
-    background: #141414 !important;
-    border: 1px solid #2a2a2a !important;
-    border-radius: 2px !important;
-    margin-bottom: 0.5rem !important;
-}
-[data-testid="stExpander"] summary {
-    font-size: 0.78rem !important;
-    letter-spacing: 0.1em !important;
-    text-transform: uppercase !important;
-    color: #888 !important;
-    font-family: 'IBM Plex Sans', sans-serif !important;
-}
-[data-testid="stExpander"] summary:hover { color: #c9a84c !important; }
-
-/* Override Streamlit alert colors */
-.stAlert {
-    background: #141414 !important;
-    border-radius: 2px !important;
-    border: 1px solid #2a2a2a !important;
-    font-size: 0.88rem !important;
-    line-height: 1.7 !important;
-    font-family: 'IBM Plex Sans', sans-serif !important;
-}
-
-/* ── Download button ── */
-[data-testid="stDownloadButton"] > button {
-    background: transparent !important;
-    color: #c9a84c !important;
-    border: 1px solid #c9a84c !important;
-    border-radius: 2px !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.1em !important;
-    text-transform: uppercase !important;
-    width: 100% !important;
-    margin-top: 0.5rem !important;
-}
-[data-testid="stDownloadButton"] > button:hover {
-    background: #c9a84c !important;
-    color: #0f0f0f !important;
-}
-
-/* ── Divider ── */
-hr { border-color: #2a2a2a !important; }
-
-/* ── Spinner ── */
-.stSpinner > div { border-top-color: #c9a84c !important; }
-
-/* ── Column border ── */
-.pdf-col {
-    border-right: 1px solid #2a2a2a;
-    padding-right: 2rem;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ── Sidebar ──────────────────────────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<div class="sidebar-brand">⚖ LawLess AI</div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-tagline">Profesionalna analiza pravnih dokumenata bez advokatskih troškova.</div>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("**Kako koristiti:**", unsafe_allow_html=False)
+    st.markdown("**Kako koristiti:**")
     st.markdown("""
 1. Otpremite PDF ugovor  
 2. Kliknite *Pokreni Analizu*  
@@ -261,7 +25,7 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     st.caption("v1.0 · Powered by Llama 3.3 70B")
 
-# ── Header ───────────────────────────────────────────────────────────────────
+# ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="app-header">
     <h1 class="app-title">Law<span>Less</span></h1>
@@ -316,6 +80,7 @@ if uploaded_file:
 
         if st.button("Pokreni Analizu", key="glavno_dugme_analize"):
 
+            # ── Validacija ────────────────────────────────────────────────
             with st.spinner("Verifikacija dokumenta..."):
                 try:
                     je_validan = logic.validate_document(raw_text)
@@ -333,6 +98,7 @@ if uploaded_file:
                 """, unsafe_allow_html=True)
                 st.stop()
 
+            # ── Analiza ───────────────────────────────────────────────────
             with st.spinner("Analiza klauzula u toku..."):
                 try:
                     izvestaj = logic.analyze_contract(raw_text)
@@ -378,7 +144,6 @@ if uploaded_file:
                 "preporuke": ["preporuke"],
                 "podaci":    ["kljucni podaci", "ključni podaci"],
             }
-            # Reci koje prekidaju parsiranje - sve posle se ignorise
             STOP_RECI = ["stroga pravila", "vazna napomena", "napomena:", "disclaimer"]
 
             sekcije = {k: [] for k in SEKCIJE_MAPA}
@@ -389,11 +154,8 @@ if uploaded_file:
                 if not clean_line:
                     continue
                 lower_line = clean_line.lower()
-
-                # Ako naletimo na stop rec, prekidamo parsiranje
                 if any(stop in lower_line for stop in STOP_RECI):
                     break
-
                 matched = False
                 for slot, kljucne_reci in SEKCIJE_MAPA.items():
                     if any(kw in lower_line for kw in kljucne_reci):
