@@ -17,17 +17,12 @@ def extract_text_from_pdf(pdf_file):
 def validate_document(text):
     """
     Proverava da li je dokument ugovor ili template ugovora.
-    Vraca (True, "ok") ako jeste, ili (False, "razlog") ako nije.
+    Vraca True ako jeste, False ako nije.
     """
     prompt = f"""
-Proceni sledeci tekst i odgovori na dva pitanja.
+Da li je sledeci tekst pravni ugovor ili template (obrazac) ugovora?
 
-1. Da li je ovo pravni ugovor ili template (obrazac) ugovora? 
-2. Da li je ugovor popunjen (ima konkretne podatke kao sto su imena, datumi, iznosi) ili je prazan template?
-
-Odgovori ISKLJUCIVO u ovom formatu, bez ikakvog dodatnog teksta:
-TIP: [UGOVOR/TEMPLATE/NIJE_UGOVOR]
-STATUS: [POPUNJEN/PRAZAN]
+Odgovori ISKLJUCIVO sa "DA" ili "NE". Bez ikakvog dodatnog teksta.
 
 Tekst dokumenta:
 {text[:2000]}
@@ -37,25 +32,9 @@ Tekst dokumenta:
         model="llama-3.3-70b-versatile",
         temperature=0.1,
     )
-    
+
     odgovor = response.choices[0].message.content.strip().upper()
-    
-    # Parsiranje odgovora
-    tip = "NEPOZNATO"
-    status = "NEPOZNATO"
-    
-    for line in odgovor.split("\n"):
-        if line.startswith("TIP:"):
-            tip = line.replace("TIP:", "").strip()
-        elif line.startswith("STATUS:"):
-            status = line.replace("STATUS:", "").strip()
-    
-    if "NIJE_UGOVOR" in tip:
-        return False, "nije_ugovor"
-    elif "POPUNJEN" in status:
-        return True, "popunjen"
-    else:
-        return True, "template"
+    return "DA" in odgovor
 
 def analyze_contract(text):
     prompt = f"""
@@ -96,54 +75,16 @@ Tekst ugovora:
     )
     return response.choices[0].message.content
 
-def analyze_filled_contract(text):
-    """Analiza za popunjen ugovor - uzima u obzir konkretne podatke."""
-    prompt = f"""
-Ti si ekspertni pravni savetnik koji analizira POPUNJEN ugovor sa konkretnim podacima.
-
-Strogo se pridrzavaj TACNO ovog formata (ne menjaj nazive sekcija):
-
-SAZETAK:
-(2-3 recenice: vrsta ugovora, ko su strane, sta je predmet ugovora)
-
-RIZICI:
-- (Analiziraj klauzule koje mogu biti nepovoljne za potpisnika)
-- (Ukazi na nejasne formulacije, jednostrane odredbe, skrivene obaveze)
-- (Ukazi na nedostajuce zastitne klauzule)
-
-PREPORUKE:
-- (Konkretni saveti pre potpisivanja ovog ugovora)
-- (Na sta posebno obratiti paznju)
-
-KLJUCNI PODACI:
-- (Strane u ugovoru, datumi, iznosi, trajanje, uslovi raskida)
-
-STROGA PRAVILA:
-1. Odgovori ISKLJUCIVO na srpskom jeziku i LATINICI. Zabranjena je cirilica.
-2. Bez emojija, samo cist tekst.
-3. Koristi konkretne podatke iz ugovora gde je relevantno.
-4. Koristi TACNO iste nazive sekcija kao sto je zadato gore.
-
-Tekst ugovora:
-{text[:7000]}
-"""
-    response = client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="llama-3.3-70b-versatile",
-        temperature=0.2,
-    )
-    return response.choices[0].message.content
-
 def get_risk_score(text):
     prompt = f"""
-Analiziras ugovor ili template ugovora.
-Oceni koliko su KLAUZULE I STRUKTURA potencijalno rizicne za osobu koja ga potpise, na skali 1 do 10.
+Analiziras PRAZAN TEMPLATE ugovora (bez popunjenih podataka).
+Oceni koliko su KLAUZULE I STRUKTURA ovog templatea potencijalno rizicne za osobu koja ga potpise, na skali 1 do 10.
 
 Kriterijumi:
 - Da li su klauzule jednostrane?
 - Da li postoje nejasne ili manipulativne formulacije?
 - Da li nedostaju vazne zastitne klauzule?
-- Koliko prostora ostavlja za zloupotrebu?
+- Koliko prostora template ostavlja za zloupotrebu pri popunjavanju?
 
 ODGOVORI SAMO JEDNIM BROJEM OD 1 DO 10. Bez ikakvog dodatnog teksta.
 

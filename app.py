@@ -37,7 +37,7 @@ if uploaded_file:
             # --- Korak 1: Validacija dokumenta ---
             with st.spinner("Proveravam tip dokumenta..."):
                 try:
-                    je_validan, tip_dokumenta = logic.validate_document(raw_text)
+                    je_validan = logic.validate_document(raw_text)
                 except Exception as e:
                     st.error(f"Greška pri validaciji: {e}")
                     st.stop()
@@ -46,19 +46,10 @@ if uploaded_file:
                 st.error("❌ Otpremljeni dokument ne izgleda kao ugovor. Molimo otpremite pravni ugovor ili template ugovora.")
                 st.stop()
 
-            if tip_dokumenta == "popunjen":
-                st.info("ℹ️ Detektovan je popunjen ugovor sa konkretnim podacima. Analiza će uzeti u obzir konkretne podatke.")
-            else:
-                st.info("ℹ️ Detektovan je prazan template ugovora. Analiza će se fokusirati na strukturu i klauzule.")
-
             # --- Korak 2: Analiza ---
             with st.spinner("Llama 3 analizira klauzule..."):
                 try:
-                    if tip_dokumenta == "popunjen":
-                        izvestaj = logic.analyze_filled_contract(raw_text)
-                    else:
-                        izvestaj = logic.analyze_contract(raw_text)
-
+                    izvestaj = logic.analyze_contract(raw_text)
                     risk_score = logic.get_risk_score(raw_text)
                 except Exception as e:
                     st.error(f"Greška pri analizi: {e}")
