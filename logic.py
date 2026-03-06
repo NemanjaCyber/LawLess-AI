@@ -14,38 +14,119 @@ def extract_text_from_pdf(pdf_file):
         text += page.extract_text() or ""
     return text
 
+def validate_document(text):
+    """
+    Proverava da li je dokument ugovor ili template ugovora.
+    Vraca (True, "ok") ako jeste, ili (False, "razlog") ako nije.
+    """
+    prompt = f"""
+Proceni sledeci tekst i odgovori na dva pitanja.
+
+1. Da li je ovo pravni ugovor ili template (obrazac) ugovora? 
+2. Da li je ugovor popunjen (ima konkretne podatke kao sto su imena, datumi, iznosi) ili je prazan template?
+
+Odgovori ISKLJUCIVO u ovom formatu, bez ikakvog dodatnog teksta:
+TIP: [UGOVOR/TEMPLATE/NIJE_UGOVOR]
+STATUS: [POPUNJEN/PRAZAN]
+
+Tekst dokumenta:
+{text[:2000]}
+"""
+    response = client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model="llama-3.3-70b-versatile",
+        temperature=0.1,
+    )
+    
+    odgovor = response.choices[0].message.content.strip().upper()
+    
+    # Parsiranje odgovora
+    tip = "NEPOZNATO"
+    status = "NEPOZNATO"
+    
+    for line in odgovor.split("\n"):
+        if line.startswith("TIP:"):
+            tip = line.replace("TIP:", "").strip()
+        elif line.startswith("STATUS:"):
+            status = line.replace("STATUS:", "").strip()
+    
+    if "NIJE_UGOVOR" in tip:
+        return False, "nije_ugovor"
+    elif "POPUNJEN" in status:
+        return True, "popunjen"
+    else:
+        return True, "template"
+
 def analyze_contract(text):
     prompt = f"""
-    Ti si ekspertni pravni savetnik koji analizira TEMPLATE ugovore (prazne obrasce bez popunjenih podataka).
-    Tvoj zadatak je da analiziras STRUKTURU i KLAUZULE ugovora, a ne konkretne strane ili iznose.
+Ti si ekspertni pravni savetnik koji analizira TEMPLATE ugovore (prazne obrasce bez popunjenih podataka).
+Tvoj zadatak je da analiziras STRUKTURU i KLAUZULE ugovora, a ne konkretne strane ili iznose.
 
-    Strogo se pridrzavaj TACNO ovog formata (ne menjaj nazive sekcija):
+Strogo se pridrzavaj TACNO ovog formata (ne menjaj nazive sekcija):
 
-    SAZETAK:
-    (2-3 recenice: koja je VRSTA ugovora, cemu sluzi, ko su tipicno strane koje ga potpisuju)
+SAZETAK:
+(2-3 recenice: koja je VRSTA ugovora, cemu sluzi, ko su tipicno strane koje ga potpisuju)
 
-    RIZICI:
-    - (Analiziraj svaku klauzulu koja moze biti nepovoljna za potpisnika)
-    - (Ukazi na nejasne formulacije, jednostrane odredbe, skrivene obaveze)
-    - (Ukazi na ono sto NEDOSTAJE - vazne zastitne klauzule kojih nema u templateu)
+RIZICI:
+- (Analiziraj svaku klauzulu koja moze biti nepovoljna za potpisnika)
+- (Ukazi na nejasne formulacije, jednostrane odredbe, skrivene obaveze)
+- (Ukazi na ono sto NEDOSTAJE - vazne zastitne klauzule kojih nema u templateu)
 
-    PREPORUKE:
-    - (Sta treba pazljivo popuniti pre potpisivanja)
-    - (Na koje stavke obratiti posebnu paznju prilikom unosa podataka)
+PREPORUKE:
+- (Sta treba pazljivo popuniti pre potpisivanja)
+- (Na koje stavke obratiti posebnu paznju prilikom unosa podataka)
 
-    KLJUCNI PODACI:
-    - (Tip ugovora, nadleznost ako je navedena, trajanje, uslovi raskida)
+KLJUCNI PODACI:
+- (Tip ugovora, nadleznost ako je navedena, trajanje, uslovi raskida)
 
-    STROGA PRAVILA:
-    1. Odgovori ISKLJUCIVO na srpskom jeziku i LATINICI. Zabranjena je cirilica.
-    2. Bez emojija, samo cist tekst.
-    3. Nikad ne izmisljaj konkretne podatke - ugovor je template.
-    4. Ako klauzula nedostaje a trebalo bi da postoji, eksplicitno to napomeni.
-    5. Koristi TACNO iste nazive sekcija kao sto je zadato gore.
+STROGA PRAVILA:
+1. Odgovori ISKLJUCIVO na srpskom jeziku i LATINICI. Zabranjena je cirilica.
+2. Bez emojija, samo cist tekst.
+3. Nikad ne izmisljaj konkretne podatke - ugovor je template.
+4. Ako klauzula nedostaje a trebalo bi da postoji, eksplicitno to napomeni.
+5. Koristi TACNO iste nazive sekcija kao sto je zadato gore.
 
-    Tekst ugovora:
-    {text[:7000]}
-    """
+Tekst ugovora:
+{text[:7000]}
+"""
+    response = client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model="llama-3.3-70b-versatile",
+        temperature=0.2,
+    )
+    return response.choices[0].message.content
+
+def analyze_filled_contract(text):
+    """Analiza za popunjen ugovor - uzima u obzir konkretne podatke."""
+    prompt = f"""
+Ti si ekspertni pravni savetnik koji analizira POPUNJEN ugovor sa konkretnim podacima.
+
+Strogo se pridrzavaj TACNO ovog formata (ne menjaj nazive sekcija):
+
+SAZETAK:
+(2-3 recenice: vrsta ugovora, ko su strane, sta je predmet ugovora)
+
+RIZICI:
+- (Analiziraj klauzule koje mogu biti nepovoljne za potpisnika)
+- (Ukazi na nejasne formulacije, jednostrane odredbe, skrivene obaveze)
+- (Ukazi na nedostajuce zastitne klauzule)
+
+PREPORUKE:
+- (Konkretni saveti pre potpisivanja ovog ugovora)
+- (Na sta posebno obratiti paznju)
+
+KLJUCNI PODACI:
+- (Strane u ugovoru, datumi, iznosi, trajanje, uslovi raskida)
+
+STROGA PRAVILA:
+1. Odgovori ISKLJUCIVO na srpskom jeziku i LATINICI. Zabranjena je cirilica.
+2. Bez emojija, samo cist tekst.
+3. Koristi konkretne podatke iz ugovora gde je relevantno.
+4. Koristi TACNO iste nazive sekcija kao sto je zadato gore.
+
+Tekst ugovora:
+{text[:7000]}
+"""
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         model="llama-3.3-70b-versatile",
@@ -55,20 +136,20 @@ def analyze_contract(text):
 
 def get_risk_score(text):
     prompt = f"""
-    Analiziras PRAZAN TEMPLATE ugovora (bez popunjenih podataka).
-    Oceni koliko su KLAUZULE I STRUKTURA ovog templatea potencijalno rizicne za osobu koja ga potpise, na skali 1 do 10.
+Analiziras ugovor ili template ugovora.
+Oceni koliko su KLAUZULE I STRUKTURA potencijalno rizicne za osobu koja ga potpise, na skali 1 do 10.
 
-    Kriterijumi:
-    - Da li su klauzule jednostrane?
-    - Da li postoje nejasne ili manipulativne formulacije?
-    - Da li nedostaju vazne zastitne klauzule?
-    - Koliko prostora template ostavlja za zloupotrebu pri popunjavanju?
+Kriterijumi:
+- Da li su klauzule jednostrane?
+- Da li postoje nejasne ili manipulativne formulacije?
+- Da li nedostaju vazne zastitne klauzule?
+- Koliko prostora ostavlja za zloupotrebu?
 
-    ODGOVORI SAMO JEDNIM BROJEM OD 1 DO 10. Bez ikakvog dodatnog teksta.
+ODGOVORI SAMO JEDNIM BROJEM OD 1 DO 10. Bez ikakvog dodatnog teksta.
 
-    Tekst:
-    {text[:5000]}
-    """
+Tekst:
+{text[:5000]}
+"""
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         model="llama-3.3-70b-versatile",
