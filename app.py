@@ -70,7 +70,7 @@ if uploaded_file:
         # pdf_viewer će automatski prikazati sve stranice i omogućiti skrolovanje
         pdf_viewer(
             input=bytes_data,
-            width=700,
+            width=None,
             height=600,
         )
 
