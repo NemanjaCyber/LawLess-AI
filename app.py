@@ -2,11 +2,12 @@ import streamlit as st
 import logic
 import base64
 import os
+from pathlib import Path
 
 st.set_page_config(page_title="LawLess AI", layout="wide", page_icon="⚖️")
 
 # ── Load CSS ──────────────────────────────────────────────────────────────────
-with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Style.css"), encoding="utf-8") as f:
+with open(Path(__file__).parent / "style.css", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -62,7 +63,24 @@ if uploaded_file:
         st.markdown('<div class="section-label">Pregled dokumenta</div>', unsafe_allow_html=True)
 
         bytes_data = uploaded_file.getvalue()
-        pdf_viewer(input=bytes_data, width=700, height=600)
+        base64_pdf = base64.b64encode(bytes_data).decode("utf-8")
+        pdf_html = f"""
+        <html><body style="margin:0;padding:0;background:#141414;">
+        <script>
+            const base64 = "{base64_pdf}";
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            const blob = new Blob([bytes], {{type: "application/pdf"}});
+            const url = URL.createObjectURL(blob);
+            const iframe = document.createElement("iframe");
+            iframe.src = url;
+            iframe.style.cssText = "width:100%;height:598px;border:1px solid #2a2a2a;border-radius:4px;";
+            document.body.appendChild(iframe);
+        </script>
+        </body></html>
+        """
+        st.components.v1.html(pdf_html, height=610, scrolling=False)
         raw_text = logic.extract_text_from_pdf(uploaded_file)
 
     with col2:
