@@ -18,7 +18,7 @@ with st.sidebar:
     st.markdown("""
 1. Otpremite PDF ugovor  
 2. Kliknite *Pokreni Analizu*  
-3. Pregledajte rizike i preporuke  
+3. Pregledajte analizu, rizike i preporuke  
 4. Preuzmite izveštaj
 """)
     st.markdown("<br>", unsafe_allow_html=True)
@@ -62,16 +62,7 @@ if uploaded_file:
         st.markdown('<div class="section-label">Pregled dokumenta</div>', unsafe_allow_html=True)
 
         bytes_data = uploaded_file.getvalue()
-        base64_pdf = base64.b64encode(bytes_data).decode('utf-8')
-        pdf_display = f'''
-            <iframe
-                src="data:application/pdf;base64,{base64_pdf}"
-                width="100%"
-                height="600px"
-                style="border-radius:4px; border:1px solid #2a2a2a; background:#141414;">
-            </iframe>
-        '''
-        st.markdown(pdf_display, unsafe_allow_html=True)
+        pdf_viewer(input=bytes_data, width=700, height=600)
         raw_text = logic.extract_text_from_pdf(uploaded_file)
 
     with col2:
