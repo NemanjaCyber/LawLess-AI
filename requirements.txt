@@ -3,4 +3,3 @@ groq
 pypdf
 python-dotenv
 fpdf
-streamlit-pdf-viewer

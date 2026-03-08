@@ -62,25 +62,26 @@ if uploaded_file:
     with col1:
         st.markdown('<div class="section-label">Pregled dokumenta</div>', unsafe_allow_html=True)
 
+        # 1. Uzmi bajtove i enkoduj u base64
         bytes_data = uploaded_file.getvalue()
         base64_pdf = base64.b64encode(bytes_data).decode("utf-8")
-        pdf_html = f"""
-        <html><body style="margin:0;padding:0;background:#141414;">
-        <script>
-            const base64 = "{base64_pdf}";
-            const binary = atob(base64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-            const blob = new Blob([bytes], {{type: "application/pdf"}});
-            const url = URL.createObjectURL(blob);
-            const iframe = document.createElement("iframe");
-            iframe.src = url;
-            iframe.style.cssText = "width:100%;height:598px;border:1px solid #2a2a2a;border-radius:4px;";
-            document.body.appendChild(iframe);
-        </script>
-        </body></html>
-        """
-        st.components.v1.html(pdf_html, height=610, scrolling=False)
+
+        # 2. Kreiraj HTML embed tag (bez kompleksnog JS-a)
+        # Koristimo <embed> jer ga pretraživači bolje tretiraju za PDF od <iframe>
+        pdf_display = f'''
+            <embed
+                src="data:application/pdf;base64,{base64_pdf}"
+                width="100%"
+                height="600"
+                type="application/pdf"
+                style="border:1px solid #2a2a2a; border-radius:4px;"
+            >
+        '''
+
+        # 3. Prikazi koristeći st.markdown sa unsafe_allow_html
+        st.markdown(pdf_display, unsafe_allow_html=True)
+        
+        # Ekstrakcija teksta ostaje ista
         raw_text = logic.extract_text_from_pdf(uploaded_file)
 
     with col2:
