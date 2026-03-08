@@ -6,8 +6,7 @@ import os
 st.set_page_config(page_title="LawLess AI", layout="wide", page_icon="⚖️")
 
 # ── Load CSS ──────────────────────────────────────────────────────────────────
-css_path = os.path.join(os.path.dirname(__file__), "Style.css")
-with open(css_path) as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "style.css"), encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -101,8 +100,7 @@ if uploaded_file:
             # ── Analiza ───────────────────────────────────────────────────
             with st.spinner("Analiza klauzula u toku..."):
                 try:
-                    izvestaj = logic.analyze_contract(raw_text)
-                    risk_score = logic.get_risk_score(raw_text)
+                    izvestaj, risk_score = logic.analyze_contract(raw_text)
                 except Exception as e:
                     st.error(f"Greška pri analizi: {e}")
                     st.stop()
@@ -144,7 +142,7 @@ if uploaded_file:
                 "preporuke": ["preporuke"],
                 "podaci":    ["kljucni podaci", "ključni podaci"],
             }
-            STOP_RECI = ["stroga pravila", "vazna napomena", "napomena:", "disclaimer"]
+            STOP_RECI = ["stroga pravila", "vazna napomena", "napomena:", "disclaimer", "ocena rizika"]
 
             sekcije = {k: [] for k in SEKCIJE_MAPA}
             current_section = None

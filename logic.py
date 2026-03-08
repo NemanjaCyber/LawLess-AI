@@ -38,11 +38,14 @@ Tekst dokumenta:
         model="llama-3.3-70b-versatile",
         temperature=0.1,
     )
-
     odgovor = response.choices[0].message.content.strip().upper()
     return "DA" in odgovor
 
 def analyze_contract(text):
+    """
+    Jedan API poziv koji vraca i tekstualnu analizu i ocenu rizika.
+    Vraca tuple: (izvestaj: str, risk_score: int)
+    """
     prompt = f"""
 Ti si ekspertni pravni savetnik koji analizira TEMPLATE ugovore (prazne obrasce bez popunjenih podataka).
 Tvoj zadatak je da analiziras STRUKTURU i KLAUZULE ugovora, a ne konkretne strane ili iznose.
@@ -64,6 +67,10 @@ PREPORUKE:
 KLJUCNI PODACI:
 - (Tip ugovora, nadleznost ako je navedena, trajanje, uslovi raskida)
 
+OCENA RIZIKA:
+(Samo jedan broj od 1 do 10 koji predstavlja nivo rizika ugovora za potpisnika.
+1 = potpuno bezbedan, 10 = izuzetno opasan. Bez dodatnog teksta, samo broj.)
+
 STROGA PRAVILA:
 1. Odgovori ISKLJUCIVO na srpskom jeziku i LATINICI. Zabranjena je cirilica.
 2. Bez emojija, samo cist tekst.
@@ -72,43 +79,33 @@ STROGA PRAVILA:
 5. Koristi TACNO iste nazive sekcija kao sto je zadato gore.
 
 Tekst ugovora:
-{text[:7000]}
+{text[:9000]}
 """
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         model="llama-3.3-70b-versatile",
         temperature=0.2,
     )
-    return response.choices[0].message.content
+    izvestaj = response.choices[0].message.content
 
-def get_risk_score(text):
-    prompt = f"""
-Analiziras PRAZAN TEMPLATE ugovora (bez popunjenih podataka).
-Oceni koliko su KLAUZULE I STRUKTURA ovog templatea potencijalno rizicne za osobu koja ga potpise, na skali 1 do 10.
+    # Izvlacimo risk score iz sekcije OCENA RIZIKA
+    risk_score = 5  # fallback
+    for line in izvestaj.split("\n"):
+        if "ocena rizika" in line.lower():
+            # Pokusavamo da uzmemo broj iz sledeceg reda
+            continue
+        if "ocena rizika" in izvestaj.lower():
+            idx = izvestaj.lower().find("ocena rizika")
+            after = izvestaj[idx:idx+60]
+            for char in after:
+                if char.isdigit():
+                    val = int(char)
+                    if 1 <= val <= 10:
+                        risk_score = val
+                        break
+            break
 
-Kriterijumi:
-- Da li su klauzule jednostrane?
-- Da li postoje nejasne ili manipulativne formulacije?
-- Da li nedostaju vazne zastitne klauzule?
-- Koliko prostora template ostavlja za zloupotrebu pri popunjavanju?
-
-ODGOVORI SAMO JEDNIM BROJEM OD 1 DO 10. Bez ikakvog dodatnog teksta.
-
-Tekst:
-{text[:5000]}
-"""
-    response = client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="llama-3.3-70b-versatile",
-        temperature=0.1,
-    )
-    score_str = response.choices[0].message.content.strip()
-    for char in score_str:
-        if char.isdigit():
-            val = int(char)
-            if 1 <= val <= 10:
-                return val
-    return 5
+    return izvestaj, risk_score
 
 def create_pdf_report(report_text):
     cyr_to_lat = {
