@@ -61,19 +61,32 @@ if uploaded_file:
 
     with col1:
         st.markdown('<div class="section-label">Pregled dokumenta</div>', unsafe_allow_html=True)
-
-        # 1. Uzimanje bajtova i enkodovanje
+        
         bytes_data = uploaded_file.getvalue()
         base64_pdf = base64.b64encode(bytes_data).decode("utf-8")
 
-        # 2. Kreiranje iframe-a direktno preko base64 (bez JS-a)
-        # Koristimo f-string ali pazimo da nema razmaka koji bi zbunili parser
-        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf" style="border:1px solid #2a2a2a; border-radius:4px;"></iframe>'
-
-        # 3. Prikazivanje preko namenske komponente za HTML (ovo je stabilnije od st.markdown)
-        st.components.v1.html(pdf_display, height=610)
-        
-        # Ekstrakcija teksta za logiku
+        # PDF.js Viewer HTML
+        pdf_viewer_html = f"""
+        <div id="pdf-container" style="border:1px solid #2a2a2a; background:#141414; height:600px; overflow:auto;">
+            <canvas id="pdf-canvas" style="width:100%;"></canvas>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+        <script>
+            const pdfData = atob("{base64_pdf}");
+            const loadingTask = pdfjsLib.getDocument({{data: pdfData}});
+            loadingTask.promise.then(pdf => {{
+                pdf.getPage(1).then(page => {{
+                    const canvas = document.getElementById('pdf-canvas');
+                    const context = canvas.getContext('2d');
+                    const viewport = page.getViewport({{scale: 1.5}});
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    page.render({{canvasContext: context, viewport: viewport}});
+                }});
+            }});
+        </script>
+        """
+        st.components.v1.html(pdf_viewer_html, height=610)
         raw_text = logic.extract_text_from_pdf(uploaded_file)
 
     with col2:
