@@ -7,7 +7,7 @@ from pathlib import Path
 st.set_page_config(page_title="LawLess AI", layout="wide", page_icon="⚖️")
 
 # ── Load CSS ──────────────────────────────────────────────────────────────────
-with open(Path(__file__).parent / "style.css", encoding="utf-8") as f:
+with open(Path(__file__).parent / "Style.css", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
