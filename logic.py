@@ -68,8 +68,15 @@ KLJUCNI PODACI:
 - (Tip ugovora, nadleznost ako je navedena, trajanje, uslovi raskida)
 
 OCENA RIZIKA:
-(Samo jedan broj od 1 do 10 koji predstavlja nivo rizika ugovora za potpisnika.
-1 = potpuno bezbedan, 10 = izuzetno opasan. Bez dodatnog teksta, samo broj.)
+(Oceni nivo rizika ugovora za potpisnika na skali od 1 do 10, uzimajuci u obzir:
+- Da li su klauzule jednostrane i idu iskljucivo u korist jedne strane?
+- Da li postoje nejasne, siroке ili manipulativne formulacije?
+- Da li nedostaju vazne zastitne klauzule (npr. raskid, odgovornost, rokovi)?
+- Koliko prostora template ostavlja za zloupotrebu pri popunjavanju?
+- Koliko su surove posledice krsenja ugovora za potpisnika?
+- Da li postoji neravnoteza u pravima i obavezama strana?
+Skala: 1 = potpuno uravnotezen i bezbedan, 5 = srednji rizik sa uocljivim problemima, 10 = izrazito jednostran i opasan.
+NAPISI SAMO JEDAN CELI BROJ OD 1 DO 10. Bez teksta, bez objasnjenja, samo broj.)
 
 STROGA PRAVILA:
 1. Odgovori ISKLJUCIVO na srpskom jeziku i LATINICI. Zabranjena je cirilica.
