@@ -3,6 +3,7 @@ import logic
 import base64
 import os
 from pathlib import Path
+from streamlit_pdf_viewer import pdf_viewer
 
 st.set_page_config(page_title="LawLess AI", layout="wide", page_icon="⚖️")
 
@@ -61,32 +62,19 @@ if uploaded_file:
 
     with col1:
         st.markdown('<div class="section-label">Pregled dokumenta</div>', unsafe_allow_html=True)
-        
-        bytes_data = uploaded_file.getvalue()
-        base64_pdf = base64.b64encode(bytes_data).decode("utf-8")
 
-        # PDF.js Viewer HTML
-        pdf_viewer_html = f"""
-        <div id="pdf-container" style="border:1px solid #2a2a2a; background:#141414; height:600px; overflow:auto;">
-            <canvas id="pdf-canvas" style="width:100%;"></canvas>
-        </div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-        <script>
-            const pdfData = atob("{base64_pdf}");
-            const loadingTask = pdfjsLib.getDocument({{data: pdfData}});
-            loadingTask.promise.then(pdf => {{
-                pdf.getPage(1).then(page => {{
-                    const canvas = document.getElementById('pdf-canvas');
-                    const context = canvas.getContext('2d');
-                    const viewport = page.getViewport({{scale: 1.5}});
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    page.render({{canvasContext: context, viewport: viewport}});
-                }});
-            }});
-        </script>
-        """
-        st.components.v1.html(pdf_viewer_html, height=610)
+        # 2. UZMI BAJTOVE DOKUMENTA
+        bytes_data = uploaded_file.getvalue()
+
+        # 3. PRIKAŽI PDF (Ovo menja sav onaj prethodni HTML/JS kod)
+        # pdf_viewer će automatski prikazati sve stranice i omogućiti skrolovanje
+        pdf_viewer(
+            input=bytes_data,
+            width=700,
+            height=600,
+        )
+
+        # Logika za ekstrakciju teksta ostaje ista
         raw_text = logic.extract_text_from_pdf(uploaded_file)
 
     with col2:
