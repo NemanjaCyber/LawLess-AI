@@ -62,26 +62,18 @@ if uploaded_file:
     with col1:
         st.markdown('<div class="section-label">Pregled dokumenta</div>', unsafe_allow_html=True)
 
-        # 1. Uzmi bajtove i enkoduj u base64
+        # 1. Uzimanje bajtova i enkodovanje
         bytes_data = uploaded_file.getvalue()
         base64_pdf = base64.b64encode(bytes_data).decode("utf-8")
 
-        # 2. Kreiraj HTML embed tag (bez kompleksnog JS-a)
-        # Koristimo <embed> jer ga pretraživači bolje tretiraju za PDF od <iframe>
-        pdf_display = f'''
-            <embed
-                src="data:application/pdf;base64,{base64_pdf}"
-                width="100%"
-                height="600"
-                type="application/pdf"
-                style="border:1px solid #2a2a2a; border-radius:4px;"
-            >
-        '''
+        # 2. Kreiranje iframe-a direktno preko base64 (bez JS-a)
+        # Koristimo f-string ali pazimo da nema razmaka koji bi zbunili parser
+        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf" style="border:1px solid #2a2a2a; border-radius:4px;"></iframe>'
 
-        # 3. Prikazi koristeći st.markdown sa unsafe_allow_html
-        st.markdown(pdf_display, unsafe_allow_html=True)
+        # 3. Prikazivanje preko namenske komponente za HTML (ovo je stabilnije od st.markdown)
+        st.components.v1.html(pdf_display, height=610)
         
-        # Ekstrakcija teksta ostaje ista
+        # Ekstrakcija teksta za logiku
         raw_text = logic.extract_text_from_pdf(uploaded_file)
 
     with col2:
