@@ -86,7 +86,7 @@ STROGA PRAVILA:
 5. Koristi TACNO iste nazive sekcija kao sto je zadato gore.
 
 Tekst ugovora:
-{text[:9000]}
+{text[:25000]}
 """
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
