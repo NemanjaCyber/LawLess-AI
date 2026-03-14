@@ -1,6 +1,6 @@
-# ⚖️ LawLess: Digitalni Advokat
+# LawLess: Digitalni Advokat
 
-**LawLess** je AI MVP projekat dizajniran da demistifikuje pravne dokumente i zaštiti korisnike od štetnih klauzula koristeći najsavremenije LLM modele.
+**LawLess** je AI MVP projekat dizajniran da pojednostavi pravne dokumente i zaštiti korisnike od štetnih klauzula koristeći najsavremenije LLM modele.
 
 ## Problem
 Pravni žargon je barijera koja prosečnog čoveka ostavlja nezaštićenim. Većina ljudi potpisuje ugovore o radu, zakupu ili saradnji bez potpunog razumevanja rizika jer su advokatske konsultacije skupe i spore.
