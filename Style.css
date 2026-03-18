@@ -7,18 +7,15 @@ html, body, [class*="css"] {
     color: #e8e2d9;
 }
 
-/* Hide Streamlit chrome */
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2rem !important; max-width: 1400px !important; }
 
-/* ── Hide sidebar collapse tooltip (keyboard_double_arrow) ── */
 [data-testid="collapsedControl"] { display: none !important; }
 button[kind="header"] { display: none !important; }
 .st-emotion-cache-1rtdyuf { display: none !important; }
 [data-testid="stSidebarCollapseButton"] { display: none !important; }
 section[data-testid="stSidebar"] button[title] { display: none !important; }
 
-/* ── Sidebar ── */
 section[data-testid="stSidebar"] {
     background: #141414;
     border-right: 1px solid #2a2a2a;
@@ -44,7 +41,6 @@ section[data-testid="stSidebar"] * {
     font-weight: 300;
 }
 
-/* ── Header ── */
 .app-header {
     display: flex;
     align-items: baseline;
@@ -70,7 +66,6 @@ section[data-testid="stSidebar"] * {
     text-transform: uppercase;
 }
 
-/* ── Upload area ── */
 [data-testid="stFileUploader"] {
     background: #141414 !important;
     border: 1px solid #2a2a2a !important;
@@ -87,7 +82,6 @@ section[data-testid="stSidebar"] * {
     text-transform: uppercase !important;
 }
 
-/* ── Section headings ── */
 .section-label {
     font-size: 0.72rem;
     font-weight: 500;
@@ -106,7 +100,6 @@ section[data-testid="stSidebar"] * {
     background: #2a2a2a;
 }
 
-/* ── Analyze button ── */
 .stButton > button {
     background: #c9a84c !important;
     color: #0f0f0f !important;
@@ -127,7 +120,6 @@ section[data-testid="stSidebar"] * {
     box-shadow: 0 4px 20px rgba(201,168,76,0.25) !important;
 }
 
-/* ── Risk score card ── */
 .risk-card {
     background: #141414;
     border: 1px solid #2a2a2a;
@@ -152,7 +144,6 @@ section[data-testid="stSidebar"] * {
 .risk-mid  { color: #d4843a; }
 .risk-high { color: #c94a4a; }
 
-/* ── Progress bar ── */
 .stProgress > div > div {
     background: #2a2a2a !important;
     border-radius: 2px !important;
@@ -162,7 +153,6 @@ section[data-testid="stSidebar"] * {
     border-radius: 2px !important;
 }
 
-/* ── Result panels ── */
 .result-panel {
     background: #141414;
     border: 1px solid #2a2a2a;
@@ -186,7 +176,6 @@ section[data-testid="stSidebar"] * {
     color: #888;
 }
 
-/* ── Expanders ── */
 [data-testid="stExpander"] {
     background: #141414 !important;
     border: 1px solid #2a2a2a !important;
@@ -202,7 +191,6 @@ section[data-testid="stSidebar"] * {
 }
 [data-testid="stExpander"] summary:hover { color: #c9a84c !important; }
 
-/* ── Streamlit alerts ── */
 .stAlert {
     background: #141414 !important;
     border-radius: 2px !important;
@@ -212,7 +200,6 @@ section[data-testid="stSidebar"] * {
     font-family: 'IBM Plex Sans', sans-serif !important;
 }
 
-/* ── Download button ── */
 [data-testid="stDownloadButton"] > button {
     background: transparent !important;
     color: #c9a84c !important;
@@ -229,6 +216,5 @@ section[data-testid="stSidebar"] * {
     color: #0f0f0f !important;
 }
 
-/* ── Misc ── */
 hr { border-color: #2a2a2a !important; }
 .stSpinner > div { border-top-color: #c9a84c !important; }

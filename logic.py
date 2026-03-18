@@ -88,7 +88,7 @@ Tekst ugovora:
     izvestaj = response.choices[0].message.content
 
     # Izvlacimo risk score iz sekcije OCENA RIZIKA
-    risk_score = 5  # fallback
+    risk_score = 5  #middle vrednost u slucaju AI greske
     for line in izvestaj.split("\n"):
         if "ocena rizika" in line.lower():
             # Pokusavamo da uzmemo broj iz sledeceg reda
