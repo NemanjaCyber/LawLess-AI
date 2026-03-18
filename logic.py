@@ -15,10 +15,6 @@ def extract_text_from_pdf(pdf_file):
     return text
 
 def validate_document(text):
-    """
-    Proverava da li dokument ima ikakve veze sa ugovorom ili pravnim tekstom.
-    Namerno je permisivan - odbija samo ocigledne ne-ugovore (slike, CV, fakture...).
-    """
     prompt = f"""
 Proceni sledeci dokument. Da li je ovo BILO KOJI od sledecih tipova dokumenta:
 - Ugovor (potpisan ili nepotpisan)
@@ -42,10 +38,6 @@ Tekst dokumenta:
     return "DA" in odgovor
 
 def analyze_contract(text):
-    """
-    Jedan API poziv koji vraca i tekstualnu analizu i ocenu rizika.
-    Vraca tuple: (izvestaj: str, risk_score: int)
-    """
     prompt = f"""
 Ti si ekspertni pravni savetnik koji analizira TEMPLATE ugovore (prazne obrasce bez popunjenih podataka).
 Tvoj zadatak je da analiziras STRUKTURU i KLAUZULE ugovora, a ne konkretne strane ili iznose.

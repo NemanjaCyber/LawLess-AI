@@ -7,11 +7,11 @@ from streamlit_pdf_viewer import pdf_viewer
 
 st.set_page_config(page_title="LawLess AI", layout="wide", page_icon="⚖️")
 
-# ── Load CSS ──────────────────────────────────────────────────────────────────
+#CSS load
 with open(Path(__file__).parent / "Style.css", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
+#Sidebar
 with st.sidebar:
     st.markdown('<div class="sidebar-brand">⚖ LawLess AI</div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-tagline">Profesionalna analiza pravnih dokumenata bez advokatskih troškova.</div>', unsafe_allow_html=True)
@@ -26,7 +26,7 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     st.caption("v1.0 · Powered by Llama 3.3 70B")
 
-# ── Header ────────────────────────────────────────────────────────────────────
+#Header
 st.markdown("""
 <div class="app-header">
     <h1 class="app-title">Law<span>Less</span></h1>
@@ -34,7 +34,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ── File uploader ─────────────────────────────────────────────────────────────
+#File upload
 uploaded_file = st.file_uploader("Otpremite PDF ugovor", type="pdf", label_visibility="collapsed")
 
 if not uploaded_file:
@@ -63,18 +63,14 @@ if uploaded_file:
     with col1:
         st.markdown('<div class="section-label">Pregled dokumenta</div>', unsafe_allow_html=True)
 
-        # 2. UZMI BAJTOVE DOKUMENTA
+        #prikaz pdf-a
         bytes_data = uploaded_file.getvalue()
-
-        # 3. PRIKAŽI PDF (Ovo menja sav onaj prethodni HTML/JS kod)
-        # pdf_viewer će automatski prikazati sve stranice i omogućiti skrolovanje
         pdf_viewer(
             input=bytes_data,
             width=None,
             height=600,
         )
 
-        # Logika za ekstrakciju teksta ostaje ista
         raw_text = logic.extract_text_from_pdf(uploaded_file)
 
     with col2:
@@ -82,7 +78,7 @@ if uploaded_file:
 
         if st.button("Pokreni Analizu", key="glavno_dugme_analize"):
 
-            # ── Validacija ────────────────────────────────────────────────
+            #Validacija
             with st.spinner("Verifikacija dokumenta..."):
                 try:
                     je_validan = logic.validate_document(raw_text)
@@ -100,7 +96,7 @@ if uploaded_file:
                 """, unsafe_allow_html=True)
                 st.stop()
 
-            # ── Analiza ───────────────────────────────────────────────────
+            #Analiza
             with st.spinner("Analiza klauzula u toku..."):
                 try:
                     izvestaj, risk_score = logic.analyze_contract(raw_text)
@@ -108,7 +104,7 @@ if uploaded_file:
                     st.error(f"Greška pri analizi: {e}")
                     st.stop()
 
-            # ── Risk score ────────────────────────────────────────────────
+            #Nivo rizik
             st.markdown('<div class="section-label" style="margin-top:1.5rem;">Ocena rizika</div>', unsafe_allow_html=True)
 
             if risk_score <= 3:
@@ -138,7 +134,7 @@ if uploaded_file:
 
             st.progress(risk_score * 10)
 
-            # ── Parser ────────────────────────────────────────────────────
+            #Parser
             SEKCIJE_MAPA = {
                 "sazetak":   ["sazetak", "sažetak"],
                 "rizici":    ["rizici", "red flags", "opasnost"],
@@ -170,7 +166,7 @@ if uploaded_file:
                 if not matched and current_section:
                     sekcije[current_section].append(clean_line)
 
-            # ── Rezultati ─────────────────────────────────────────────────
+            #Rezultati
             st.markdown('<div class="section-label" style="margin-top:1.5rem;">Rezultati analize</div>', unsafe_allow_html=True)
 
             if sekcije["sazetak"]:
@@ -192,7 +188,7 @@ if uploaded_file:
             if not any(sekcije.values()):
                 st.text(izvestaj)
 
-            # ── Export ────────────────────────────────────────────────────
+            #Export
             st.markdown('<div class="section-label" style="margin-top:1.5rem;">Izvoz</div>', unsafe_allow_html=True)
             pdf_data = logic.create_pdf_report(izvestaj)
             st.download_button(

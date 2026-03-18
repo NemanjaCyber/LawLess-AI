@@ -11,8 +11,8 @@ Pravni žargon je barijera koja prosečnog čoveka ostavlja nezaštićenim. Već
 * **Mali preduzetnici:** Razumevanje obaveza prema dobavljačima.
 
 ## Glavne Funkcionalnosti
-1. **Automatsko Sumiranje:** Pretvara 20 strana teksta u 3 ključne tačke.
-2. **RDetektor rizika:** Identifikacija penala, skrivenih troškova i nepovoljnih rokova.
+1. **Automatsko Sumiranje:** Pretvara 10 strana teksta u 4 ključne tačke.
+2. **Detektor rizika:** Identifikacija penala, skrivenih troškova i nepovoljnih rokova.
 3. **Pravni Prevodilac:** Objašnjavanje komplikovanih termina na svakodnevnom jeziku.
 
 ## Tehnološki Stack
